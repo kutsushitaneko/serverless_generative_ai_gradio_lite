@@ -26,8 +26,23 @@ except Exception as e:
 
 def inference(message):
     chat_request = oci.generative_ai_inference.models.CohereChatRequest()
-    chat_request.message = f"##以下の文章は翻訳対象の原文です。\n##原文：{message}\n##原文が主に日本語の場合は英語に翻訳して翻訳文だけを出力してください。原文が主に日本語以外の場合は日本語に翻訳して翻訳文だけを出力してください。\n##Example：\n###Example-1：原文：こんにちは！\n出力：Hello!\n###Example-2：原文：Good morning.\n出力：おはようございます"
-    chat_request.max_tokens = 1000
+    chat_request.message = f'''
+    ##あなたは翻訳の専門家です。与えられた原文が日本語かどうかを判断して以下の指示のとおりに翻訳することが仕事です。
+    ##以下の文章は翻訳対象の原文です。
+    ##原文：{message}
+    ##指示：以下のSTEPに従って原文を翻訳してください。
+    ###STEP-1：原文が主に日本語であるかどうかを判断します。
+    ###STEP-2：原文が主に日本語の場合は英語に翻訳します。
+    ###STEP-3：原文が主に日本語以外の場合は日本語に翻訳します。
+    ###STEP-4：以下の出力フォーマットに従って出力します。途中のSTEPの結果は出力しません。
+    ##出力フォーマット：{{"input": "原文","output": "翻訳文"}}
+    ##以下は原文とそれに対するあなたの出力の例です。
+    ###Example-1：原文：こんにちは！
+    出力：{{"input": "こんにちは！","output": "Hello!"}}
+    ###Example-2：原文：Good morning.
+    出力：{{"input": "Good morning.","output": "おはようございます。"}}
+    '''
+    chat_request.max_tokens = 2000
     chat_request.is_stream = False
     chat_request.temperature = 0.0
     chat_request.top_p = 0.7
