@@ -40,4 +40,4 @@ with gr.Blocks() as demo:
 
     translate_button.click(fn=translate, inputs=input_text, outputs=output_text)
 
-demo.launch(share=True)
+demo.launch(share=True, favicon_path="img/ai_aoyama_favicon.png")

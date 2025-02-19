@@ -7,16 +7,17 @@ import os
 
 from fdk import response
 
-model_id = "cohere.command-r-plus"
-
 try:
     endpoint = os.getenv("OCI_GENAI_ENDPOINT")
     compartment_id = os.getenv("COMPARTMENT_OCID")
+    model_id = os.getenv("OCI_GENAI_MODEL_ID")
 
     if not endpoint:
         raise ValueError("ERROR: Missing configuration key OCI_GENAI_ENDPOINT")
     if not compartment_id:
         raise ValueError("ERROR: Missing configuration key COMPARTMENT_OCID")
+    if not model_id:
+        raise ValueError("ERROR: Missing configuration key OCI_GENAI_MODEL_ID")
 
     signer = oci.auth.signers.get_resource_principals_signer()
     generative_ai_inference_client = oci.generative_ai_inference.GenerativeAiInferenceClient(config={}, service_endpoint=endpoint, signer=signer,retry_strategy=oci.retry.NoneRetryStrategy(), timeout=(10,240))
@@ -25,6 +26,7 @@ except Exception as e:
    raise
 
 def inference(message):
+    logging.getLogger().info(f"messages:{message}")
     chat_request = oci.generative_ai_inference.models.CohereChatRequest()
     chat_request.message = f'''
     ##あなたは翻訳の専門家です。与えられた原文が日本語かどうかを判断して以下の指示のとおりに翻訳することが仕事です。
@@ -57,25 +59,35 @@ def inference(message):
 
     try:
         chat_response = generative_ai_inference_client.chat(chat_detail)
+        logging.getLogger().info(f"chat_response.text:{chat_response.data.chat_response.text}")
         return chat_response.data.chat_response.text
     except Exception as e:
         logging.getLogger().error(e)
         raise
 
 def handler(ctx, data: io.BytesIO = None):
-    message = "こんにちは！"
+    logging.getLogger().info("handler is called")
+    logging.getLogger().info(f"OCI_GENAI_MODEL_ID: {model_id}")
     try:
         body = json.loads(data.getvalue())
         message = body["message"]
     except (Exception, ValueError) as ex:
         logging.getLogger().info('error parsing json payload: ' + str(ex))     
-    logging.getLogger().info("Inside Python Hello World function")
 
-    inference_response  = inference(message)
 
+    if not message.strip():
+        return response.Response(
+            ctx, response_data=json.dumps(
+                {"message": "There is no text to translate."},
+                ensure_ascii=False
+            ),
+            headers={"Content-Type": "application/json; charset=utf-8"}
+        )
+
+    inference_response = inference(message)
     return response.Response(
         ctx, response_data=json.dumps(
-            {"message": "{0}".format(inference_response)},
+            {"message": f"{inference_response}"},
             ensure_ascii=False
         ),
         headers={"Content-Type": "application/json; charset=utf-8"}
