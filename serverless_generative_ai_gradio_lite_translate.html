@@ -16,7 +16,7 @@
             import re
 
             def translate(text):
-                url = "エンドポイント名/v1/translate"
+                url = "エンドポイント名/translate"
                 headers = {"Content-Type": "application/json"}
                 data = {"message": text}
                 
@@ -52,7 +52,7 @@
 
                 translate_button.click(fn=translate, inputs=input_text, outputs=output_text)
 
-            demo.launch(share=True)
+            demo.launch()
 
     	</gradio-lite>
     </body>
