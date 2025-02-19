@@ -43,6 +43,7 @@ def inference(message):
     出力：{{"input": "こんにちは！","output": "Hello!"}}
     ###Example-2：原文：Good morning.
     出力：{{"input": "Good morning.","output": "おはようございます。"}}
+    改行や空行があっても単一のJSONで出力します。
     '''
     chat_request.max_tokens = 2000
     chat_request.is_stream = False
